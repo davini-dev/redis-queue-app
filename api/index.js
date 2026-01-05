@@ -3,6 +3,8 @@ const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
 require('dotenv').config();
 
+const { name, version } = require('./package.json');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -41,7 +43,12 @@ app.post('/enviar', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({
+    service: name,
+    version,
+    status: 'ok',
+    timestamp: new Date().toISOString()
+   });
 });
 
 app.listen(port, () => {
