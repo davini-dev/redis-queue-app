@@ -40,6 +40,10 @@ app.post('/enviar', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 app.listen(port, () => {
   console.log(`API rodando em http://localhost:${port}`);
 });
