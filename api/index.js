@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 // Configuração do Redis usando URL
 const redisConnection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
+  connectTimeout: 10000, // 10 segundos
   tls: {
     rejectUnauthorized: false // Necessário para conexões rediss:// no Render
   }
