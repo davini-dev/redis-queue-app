@@ -8,13 +8,17 @@ const { name, version } = require('./package.json');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuração do Redis usando URL
-const redisConnection = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null,
-  connectTimeout: 10000, // 10 segundos
-  tls: {
-    rejectUnauthorized: false // Necessário para conexões rediss:// no Render
-  }
+// Configuração do Redis
+const redisConnection = new IORedis({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    username: process.env.REDIS_USERNAME,
+    password: process.env.REDIS_PASSWORD,
+    maxRetriesPerRequest: null,
+    connectTimeout: 10000, // 10 segundos
+    tls: {
+        rejectUnauthorized: false
+    }
 });
 
 // Criação da fila
