@@ -3,6 +3,8 @@ const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
 require('dotenv').config();
 
+const { name, version } = require('./package.json');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -38,6 +40,15 @@ app.post('/enviar', async (req, res) => {
     console.error('Erro ao enfileirar:', error);
     res.status(500).json({ error: 'Erro interno ao processar solicitação' });
   }
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    service: name,
+    version,
+    status: 'ok',
+    timestamp: new Date().toISOString()
+   });
 });
 
 app.listen(port, () => {
