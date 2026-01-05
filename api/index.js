@@ -52,6 +52,10 @@ app.get('/', (req, res) => {
    });
 });
 
-app.listen(port, () => {
-  console.log(`API rodando em http://localhost:${port}`);
-});
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`API rodando em http://localhost:${port}`);
+    });
+}
+
+module.exports = app;
