@@ -3,6 +3,7 @@ const IORedis = require('ioredis');
 const knex = require('knex');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+const logger = require('../logger');
 
 // Configuração do Banco de Dados PostgreSQL (Neon)
 const db = knex({
@@ -23,12 +24,12 @@ async function initDb() {
         table.jsonb('conteudo'); // Usando jsonb para PostgreSQL
         table.timestamp('criado_em').defaultTo(db.fn.now());
       });
-      console.log('Tabela "solicitacoes" criada no PostgreSQL.');
+      logger.info('Table "solicitacoes" created in PostgreSQL.');
     } else {
-      console.log('Tabela "solicitacoes" já existe.');
+      logger.info('Table "solicitacoes" already exists.');
     }
   } catch (error) {
-    console.error('Erro ao inicializar banco de dados:', error);
+    logger.error({ err: error }, 'Error initializing database');
     process.exit(1);
   }
 }
@@ -45,7 +46,7 @@ const redisConfig = process.env.REDIS_URL
     };
 
 if (typeof redisConfig === 'object' && redisConfig.port === undefined && process.env.REDIS_PORT) {
-    console.warn('REDIS_PORT is not a valid number and will be ignored.');
+    logger.warn('REDIS_PORT is not a valid number and will be ignored.');
 }
 
 const redisOptions = {
@@ -64,30 +65,30 @@ const redisConnection = new IORedis(redisConfig, redisOptions);
 
 // Processador da Fila
 const worker = new Worker('solicitacoes', async (job) => {
-  console.log(`Processando job ${job.id}...`);
-  
+  logger.info(`Processing job ${job.id}...`);
+
   try {
     // Insere os dados no banco de dados relacional
     await db('solicitacoes').insert({
       conteudo: job.data // Knex lida com o objeto JSON para jsonb no PG
     });
-    
-    console.log(`Job ${job.id} processado e salvo no PostgreSQL.`);
+
+    logger.info(`Job ${job.id} processed and saved to PostgreSQL.`);
   } catch (error) {
-    console.error(`Erro ao processar job ${job.id}:`, error);
+    logger.error({ err: error }, `Error processing job ${job.id}`);
     throw error;
   }
 }, { connection: redisConnection });
 
 worker.on('completed', (job) => {
-  console.log(`Job ${job.id} concluído com sucesso!`);
+  logger.info(`Job ${job.id} completed successfully!`);
 });
 
 worker.on('failed', (job, err) => {
-  console.log(`Job ${job.id} falhou: ${err.message}`);
+  logger.warn(`Job ${job.id} failed: ${err.message}`);
 });
 
 // Iniciar
 initDb().then(() => {
-  console.log('Worker aguardando trabalhos na fila "solicitacoes"...');
+  logger.info('Worker waiting for jobs in the "solicitacoes" queue...');
 });
