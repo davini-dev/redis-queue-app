@@ -33,17 +33,28 @@ async function initDb() {
 }
 
 // Configuração do Redis
-const redisConnection = new IORedis({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    username: process.env.REDIS_USERNAME,
-    password: process.env.REDIS_PASSWORD,
+const redisConfig = process.env.REDIS_URL 
+    ? process.env.REDIS_URL 
+    : {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+    };
+
+const redisOptions = {
     maxRetriesPerRequest: null,
     connectTimeout: 10000, // 10 segundos
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+};
+
+// Se a URL começar com rediss:// ou se TLS for explicitamente necessário
+if (typeof redisConfig === 'string' && redisConfig.startsWith('rediss://')) {
+    redisOptions.tls = { rejectUnauthorized: false };
+} else if (typeof redisConfig === 'object' && process.env.REDIS_TLS === 'true') {
+    redisOptions.tls = { rejectUnauthorized: false };
+}
+
+const redisConnection = new IORedis(redisConfig, redisOptions);
 
 // Processador da Fila
 const worker = new Worker('solicitacoes', async (job) => {
