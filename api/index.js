@@ -2,7 +2,6 @@ const express = require('express');
 const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
 require('dotenv').config();
-const logger = require('../logger');
 
 const { name, version } = require('./package.json');
 
@@ -44,30 +43,23 @@ const myQueue = new Queue('solicitacoes', { connection: redisConnection });
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  logger.info(`Request received: ${req.method} ${req.url}`);
-  next();
-});
-
 app.post('/enviar', async (req, res) => {
   try {
     const data = req.body;
 
     if (!data || Object.keys(data).length === 0) {
-      logger.warn('Received invalid or empty JSON');
       return res.status(400).json({ error: 'JSON inválido ou vazio' });
     }
 
     // Adiciona o trabalho à fila
     const job = await myQueue.add('processar_json', data);
-    logger.info(`Job ${job.id} added to the queue`);
 
     res.status(202).json({
       message: 'Solicitação recebida e enfileirada',
       jobId: job.id
     });
   } catch (error) {
-    logger.error({ err: error }, 'Error queueing the job');
+    console.error('Erro ao enfileirar:', error);
     res.status(500).json({ error: 'Erro interno ao processar solicitação' });
   }
 });
@@ -83,7 +75,7 @@ app.get('/', (req, res) => {
 
 if (require.main === module) {
     app.listen(port, () => {
-        logger.info(`API running at http://localhost:${port}`);
+        console.log(`API rodando em http://localhost:${port}`);
     });
 }
 
