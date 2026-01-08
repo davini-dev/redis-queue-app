@@ -23,11 +23,17 @@ const redisOptions = {
     connectTimeout: 10000, // 10 segundos
 };
 
-// Se a URL começar com rediss:// ou se TLS for explicitamente necessário
-if (typeof redisConfig === 'string' && redisConfig.startsWith('rediss://')) {
-    redisOptions.tls = { rejectUnauthorized: false };
-} else if (typeof redisConfig === 'object' && process.env.REDIS_TLS === 'true') {
-    redisOptions.tls = { rejectUnauthorized: false };
+// Configura o TLS de forma segura
+if ((typeof redisConfig === 'string' && redisConfig.startsWith('rediss://')) || process.env.REDIS_TLS === 'true') {
+    redisOptions.tls = {
+        // Se um certificado CA for fornecido, use-o
+        ca: process.env.REDIS_CA_CERT ? Buffer.from(process.env.REDIS_CA_CERT, 'base64').toString('ascii') : undefined,
+        // Por padrão, rejectUnauthorized é true. Se não houver CA, ele usará as CAs do sistema.
+        // Se um CA for fornecido, ele o usará para verificação.
+        // Se você realmente precisar desabilitar a verificação (não recomendado),
+        // defina uma variável de ambiente para isso, por exemplo, ALLOW_INSECURE_REDIS=true
+        rejectUnauthorized: process.env.ALLOW_INSECURE_REDIS !== 'true',
+    };
 }
 
 const redisConnection = new IORedis(redisConfig, redisOptions);
