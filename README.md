@@ -20,7 +20,7 @@ As aplicações já estão configuradas nos arquivos `.env` com as seguintes URL
 
 Em ambas as pastas (`api` e `worker`), execute:
 ```bash
-npm install
+bun install
 ```
 
 ### 2. Executar as Aplicações
@@ -28,13 +28,13 @@ npm install
 **Terminal 1 (API):**
 ```bash
 cd api
-node index.js
+bun start
 ```
 
 **Terminal 2 (Worker):**
 ```bash
 cd worker
-node index.js
+bun start
 ```
 
 ## Observação Importante sobre Segurança
