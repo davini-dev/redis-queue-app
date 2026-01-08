@@ -1,7 +1,8 @@
 const { Worker } = require('bullmq');
 const IORedis = require('ioredis');
 const knex = require('knex');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // Configuração do Banco de Dados PostgreSQL (Neon)
 const db = knex({
@@ -33,14 +34,19 @@ async function initDb() {
 }
 
 // Configuração do Redis
-const redisConfig = process.env.REDIS_URL 
-    ? process.env.REDIS_URL 
+const redisPort = process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : undefined;
+const redisConfig = process.env.REDIS_URL
+    ? process.env.REDIS_URL
     : {
         host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
+        port: Number.isFinite(redisPort) ? redisPort : undefined,
         username: process.env.REDIS_USERNAME,
         password: process.env.REDIS_PASSWORD,
     };
+
+if (typeof redisConfig === 'object' && redisConfig.port === undefined && process.env.REDIS_PORT) {
+    console.warn('REDIS_PORT is not a valid number and will be ignored.');
+}
 
 const redisOptions = {
     maxRetriesPerRequest: null,
